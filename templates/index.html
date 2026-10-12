@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#f6f6f2">
+    <meta name="description" content="Organiza tu despensa, aprovecha lo que ya tienes y reduce el desperdicio de alimentos.">
+    <title>VerdeListo — Menos desperdicio, más aprovechamiento</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+  </head>
+  <body>
+    <section class="auth-screen" id="auth-screen" aria-labelledby="auth-title" aria-modal="true" role="dialog">
+      <div class="auth-card">
+        <a class="brand auth-brand" href="#inicio" aria-label="VerdeListo">
+          <span class="brand-mark">v.</span><span>verde<span class="brand-light">listo</span></span>
+        </a>
+        <p class="eyebrow">TU DESPENSA, TU ESPACIO</p>
+        <h1 id="auth-title">Guarda tus alimentos en un solo lugar.</h1>
+        <p class="auth-intro">Crea una cuenta o inicia sesión para acceder a tu inventario personal.</p>
+        <div class="auth-tabs" role="tablist" aria-label="Acceso a tu cuenta">
+          <button class="auth-tab active" type="button" data-auth-mode="login" role="tab" aria-selected="true">Iniciar sesión</button>
+          <button class="auth-tab" type="button" data-auth-mode="register" role="tab" aria-selected="false">Crear cuenta</button>
+        </div>
+        <form id="auth-form">
+          <label id="auth-name-wrap" class="auth-field hidden">Tu nombre
+            <input id="auth-name" name="name" maxlength="80" autocomplete="name" placeholder="Ej. Gabo">
+          </label>
+          <label class="auth-field">Correo electrónico
+            <input id="auth-email" name="email" type="email" maxlength="254" autocomplete="email" required placeholder="tu@correo.com">
+          </label>
+          <label class="auth-field">Contraseña
+            <input id="auth-password" name="password" type="password" minlength="8" maxlength="128" autocomplete="current-password" required placeholder="Mínimo 8 caracteres">
+          </label>
+          <p class="auth-error hidden" id="auth-error" role="alert"></p>
+          <button class="button button-primary auth-submit" id="auth-submit" type="submit">Iniciar sesión <span>→</span></button>
+        </form>
+        <p class="auth-privacy">Tu contraseña se guarda protegida; nunca se almacena como texto legible.</p>
+      </div>
+    </section>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <a class="brand" href="#inicio" aria-label="VerdeListo, inicio">
+          <span class="brand-mark">v.</span>
+          <span>verde<span class="brand-light">listo</span></span>
+        </a>
+        <p class="sidebar-label">TU ESPACIO</p>
+        <nav class="main-nav" aria-label="Navegación principal">
+          <a class="nav-link active" href="#inicio" data-view="inicio"><span>⌂</span> Resumen</a>
+          <a class="nav-link" href="#despensa" data-view="despensa"><span>▤</span> Mi despensa <b id="nav-count">0</b></a>
+          <a class="nav-link" href="#ideas" data-view="ideas"><span>✳</span> Ideas para cocinar</a>
+          <a class="nav-link" href="#impacto" data-view="impacto"><span>↗</span> Mi impacto</a>
+          <a class="nav-link" href="#pitch" data-view="pitch"><span>◉</span> Pitch de 5 minutos</a>
+        </nav>
+        <div class="sidebar-bottom">
+          <div class="sidebar-tip">
+            <span class="tip-icon">✦</span>
+            <p><strong>Pequeños cambios,</strong><br>gran diferencia.</p>
+            <span class="tip-caption">Cada alimento aprovechado cuenta.</span>
+          </div>
+          <div class="profile">
+            <div class="avatar">G</div>
+            <div class="profile-copy"><strong id="profile-name">Mi hogar</strong><small id="profile-email">Plan consciente</small></div>
+          </div>
+        </div>
+      </aside>
+
+      <main class="main-content">
+        <header class="topbar">
+          <div class="breadcrumb">Mi espacio <span>/</span> <strong id="breadcrumb-current">Resumen</strong></div>
+          <div class="topbar-actions">
+            <span class="today-label" id="today-label"></span>
+            <button class="icon-button" id="quick-add" aria-label="Agregar alimento" title="Agregar alimento">＋</button>
+            <button type="button" class="logout-button" id="logout-button">Salir</button>
+            <div class="avatar avatar-small" id="topbar-avatar">G</div>
+          </div>
+        </header>
+
+        <section class="view active" id="view-inicio">
+          <div class="welcome-row">
+            <div>
+              <p class="eyebrow">TU DESPENSA, BAJO CONTROL</p>
+              <h1 id="welcome-title">Hola, Gabo <span class="wave">✳</span></h1>
+              <p class="welcome-subtitle">Aprovechar mejor empieza por saber qué tienes.</p>
+            </div>
+            <button class="button button-primary" data-open-form>＋ <span>Agregar alimento</span></button>
+          </div>
+          <div class="hero-card">
+            <div class="hero-copy">
+              <span class="hero-tag"><span class="live-dot"></span> UN HÁBITO A LA VEZ</span>
+              <h2>Que nada bueno<br>se quede olvidado.</h2>
+              <p>Organiza tus alimentos y descubre qué conviene disfrutar primero.</p>
+              <a class="hero-link" href="#despensa" data-view="despensa">Revisar mi despensa <span>→</span></a>
+            </div>
+            <div class="hero-art" aria-hidden="true">
+              <div class="sun-circle"></div>
+              <div class="produce produce-one">🥑</div><div class="produce produce-two">🍊</div>
+              <div class="produce produce-three">🥬</div><div class="produce produce-four">🍅</div>
+              <div class="hero-sparkle">✳</div><div class="hero-ground"></div>
+            </div>
+          </div>
+
+          <div class="section-heading">
+            <div><p class="eyebrow">UNA MIRADA RÁPIDA</p><h2>Tu resumen</h2></div>
+            <a href="#despensa" data-view="despensa" class="text-link">Ver despensa <span>→</span></a>
+          </div>
+          <div class="stats-grid">
+            <article class="stat-card"><div class="stat-top"><span>En tu despensa</span><span class="stat-icon green-icon">▤</span></div><div class="stat-number" id="stat-active">0</div><p>alimentos registrados</p></article>
+            <article class="stat-card"><div class="stat-top"><span>Para revisar primero</span><span class="stat-icon amber-icon">◷</span></div><div class="stat-number" id="stat-urgent">0</div><p>vencen pronto o ya vencieron</p></article>
+            <article class="stat-card"><div class="stat-top"><span>Aprovechados</span><span class="stat-icon blue-icon">✓</span></div><div class="stat-number" id="stat-used">0</div><p>marcados como consumidos</p></article>
+            <article class="stat-card"><div class="stat-top"><span>Desperdicio registrado</span><span class="stat-icon coral-icon">↘</span></div><div class="stat-number" id="stat-wasted">0</div><p>alimentos marcados</p></article>
+          </div>
+
+          <div class="dashboard-columns">
+            <section class="panel priority-panel">
+              <div class="panel-heading"><div><p class="eyebrow">PRIORIDAD</p><h2>Mejor usar primero</h2></div><span class="heading-icon">◷</span></div>
+              <div id="priority-list" class="food-list"></div>
+              <a class="panel-footer-link" href="#despensa" data-view="despensa">Ver todos los alimentos <span>→</span></a>
+            </section>
+            <section class="panel idea-panel">
+              <div class="panel-heading"><div><p class="eyebrow">INSPIRACIÓN DEL DÍA</p><h2>Una idea rica</h2></div><span class="heading-icon idea-icon">✳</span></div>
+              <div class="featured-recipe"><div class="recipe-art">🥗</div><div><span class="recipe-label">CERO COMPLICACIONES</span><h3>Una comida con lo que ya tienes</h3><p>Abre tus ideas para cocinar y encuentra inspiración para aprovechar tus ingredientes.</p></div></div>
+              <a class="panel-footer-link" href="#ideas" data-view="ideas">Explorar ideas <span>→</span></a>
+            </section>
+          </div>
+          <p class="data-note">Tus números reflejan los registros de esta despensa; no son estimaciones de impacto ambiental.</p>
+        </section>
+
+        <section class="view" id="view-despensa">
+          <div class="page-heading"><div><p class="eyebrow">LO QUE YA TIENES</p><h1>Mi despensa</h1><p class="welcome-subtitle">Un vistazo claro para decidir qué preparar hoy.</p></div><button class="button button-primary" data-open-form>＋ <span>Agregar alimento</span></button></div>
+          <div class="filter-row">
+            <label class="search-box"><span>⌕</span><input id="food-search" type="search" placeholder="Buscar alimento..." aria-label="Buscar alimento"></label>
+            <label class="select-wrap"><span class="sr-only">Filtrar por estado</span><select id="food-filter"><option value="all">Todos los alimentos</option><option value="urgent">Usar pronto</option><option value="fresh">En buen estado</option></select></label>
+          </div>
+          <div id="pantry-list" class="pantry-grid"></div>
+          <div id="pantry-empty" class="empty-state hidden"><span>🧺</span><h2>Tu despensa empieza aquí</h2><p>Registra algunos alimentos para recibir recordatorios útiles.</p><button class="button button-primary" data-open-form>＋ Agregar alimento</button></div>
+        </section>
+
+        <section class="view" id="view-ideas">
+          <div class="page-heading"><div><p class="eyebrow">COCINA CON INTENCIÓN</p><h1>Ideas para cocinar</h1><p class="welcome-subtitle">Inspiración sencilla a partir de lo que tienes a mano.</p></div></div>
+          <div class="ideas-intro"><span>✳</span><div><strong>Primero, lo que ya está en casa.</strong><p>Las coincidencias se basan en los nombres de los alimentos de tu despensa.</p></div></div>
+          <div id="recipe-list" class="recipe-grid"></div>
+        </section>
+
+        <section class="view" id="view-impacto">
+          <div class="page-heading"><div><p class="eyebrow">CAMBIOS QUE SE PUEDEN MEDIR</p><h1>Mi impacto</h1><p class="welcome-subtitle">Registra lo que aprovechas y lo que se desperdicia para aprender de tus hábitos.</p></div></div>
+          <div class="impact-banner"><div class="impact-icon">♧</div><div><span class="eyebrow">UNA META, NO UNA PROMESA</span><h2>Empezar a medir ya es un buen comienzo.</h2><p>Con más registros, podrás comparar periodos y definir una meta realista para tu hogar.</p></div></div>
+          <div class="impact-stats"><article class="impact-card"><span>Alimentos aprovechados</span><strong id="impact-used">0</strong><small>marcados como consumidos</small></article><article class="impact-card"><span>Desperdicios registrados</span><strong id="impact-wasted">0</strong><small>marcados como desperdicio</small></article></div>
+          <section class="panel history-panel"><div class="panel-heading"><div><p class="eyebrow">ACTIVIDAD RECIENTE</p><h2>Tu registro</h2></div></div><div id="history-list" class="history-list"></div><p class="data-note">Esta herramienta registra unidades y cantidades de tu hogar; no convierte esos datos en emisiones evitadas.</p></section>
+        </section>
+
+        <section class="view" id="view-pitch">
+          <div class="page-heading"><div><p class="eyebrow">PRESENTACIÓN HACKATHON · 5 MIN</p><h1>La idea, en cinco minutos</h1><p class="welcome-subtitle">Una guía breve para contar qué problema resuelve VerdeListo y cómo comprobar su valor.</p></div></div>
+          <div class="pitch-list">
+            <article><span class="pitch-time">0:00 — 0:40</span><div><h2>01 · Abrir con una pregunta</h2><p>¿Alguna vez encontraron comida olvidada en la nevera y tuvieron que tirarla? Parte de ese desperdicio puede evitarse con mejor organización.</p></div></article>
+            <article><span class="pitch-time">0:40 — 1:30</span><div><h2>02 · Explicar el problema</h2><p>Las compras excesivas, la falta de planificación y los alimentos fuera de vista hacen que familias y estudiantes pierdan comida que todavía podrían aprovechar.</p></div></article>
+            <article><span class="pitch-time">1:30 — 2:50</span><div><h2>03 · Mostrar la solución</h2><p>VerdeListo permite registrar alimentos, consultar cuáles conviene usar primero y encontrar ideas para cocinar con lo que ya está en casa.</p></div></article>
+            <article><span class="pitch-time">2:50 — 3:50</span><div><h2>04 · Hablar del impacto esperado</h2><p>Una despensa más organizada puede ayudar a reducir el desperdicio. Evitar que alimentos se desechen también puede reducir el impacto asociado a producirlos, transportarlos y desecharlos.</p></div></article>
+            <article><span class="pitch-time">3:50 — 5:00</span><div><h2>05 · Cerrar con cómo lo medirás</h2><p>Proponemos comparar los registros de desperdicio antes y después de usar la herramienta, durante un periodo definido. Es un objetivo que tendremos que validar con datos reales.</p></div></article>
+          </div>
+          <div class="pitch-qa"><p class="eyebrow">PREGUNTAS QUE PODRÍAN HACERTE</p><details><summary>¿Quién usaría la herramienta?</summary><p>Familias y estudiantes que quieren organizar lo que tienen y aprovecharlo antes de que se eche a perder.</p></details><details><summary>¿Cómo sabrás si funciona?</summary><p>Comparando las cantidades de desperdicio registradas antes y después de usarla, con el mismo método y durante periodos definidos.</p></details><details><summary>¿Ya está demostrado su impacto?</summary><p>No todavía. Es una hipótesis y una meta del proyecto; solo podremos hablar de resultados después de reunir datos reales.</p></details></div>
+        </section>
+      </main>
+    </div>
+
+    <dialog id="food-dialog" class="food-dialog">
+      <form id="food-form">
+        <div class="dialog-heading"><div><p class="eyebrow">ACTUALIZA TU DESPENSA</p><h2>Agregar alimento</h2></div><button type="button" class="close-button" id="close-dialog" aria-label="Cerrar">×</button></div>
+        <label>¿Qué alimento es?<input name="name" maxlength="80" required placeholder="Ej. Tomates"></label>
+        <div class="form-split"><label>Categoría<select name="category" required><option>Frutas</option><option>Verduras</option><option>Lácteos</option><option>Proteínas</option><option>Despensa</option><option>Otros</option></select></label><label>Cantidad<input name="quantity" type="number" min="0.01" max="100000" step="any" value="1" required></label></div>
+        <div class="form-split"><label>Unidad<select name="unit" required><option>unidad</option><option>kg</option><option>g</option><option>L</option><option>ml</option><option>paquete</option></select></label><label>Fecha de vencimiento<input name="expires_on" type="date" required></label></div>
+        <p class="form-error hidden" id="form-error" role="alert"></p>
+        <button class="button button-primary submit-button" type="submit">Guardar alimento <span>→</span></button>
+      </form>
+    </dialog>
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+    <script src="{{ url_for('static', filename='app.js') }}" defer></script>
+  </body>
+</html>
