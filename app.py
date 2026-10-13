@@ -9,7 +9,14 @@ from functools import wraps
 from pathlib import Path
 from typing import Any, Generator
 
-from flask import Flask, g, jsonify, render_template, request, session
+from flask import (
+    Flask,
+    g,
+    jsonify,
+    render_template,
+    request,
+    session,
+)
 from werkzeug.security import check_password_hash, generate_password_hash
 
 app = Flask(__name__)
@@ -22,7 +29,14 @@ app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
 app.config["SESSION_COOKIE_SECURE"] = os.environ.get("HTTPS_ONLY") == "1"
 
 UNITS = {"unidad", "kg", "g", "L", "ml", "paquete"}
-CATEGORIES = {"Frutas", "Verduras", "Lácteos", "Proteínas", "Despensa", "Otros"}
+CATEGORIES = {
+    "Frutas",
+    "Verduras",
+    "Lácteos",
+    "Proteínas",
+    "Despensa",
+    "Otros",
+}
 
 
 @contextmanager
@@ -65,14 +79,17 @@ def initialize_db() -> None:
             """
         )
         columns = {
-            row["name"] for row in connection.execute("PRAGMA table_info(foods)")
+            row["name"]
+            for row in connection.execute("PRAGMA table_info(foods)")
         }
         if "user_id" not in columns:
             connection.execute(
-                "ALTER TABLE foods ADD COLUMN user_id INTEGER REFERENCES users(id)"
+                "ALTER TABLE foods ADD COLUMN user_id "
+                "INTEGER REFERENCES users(id)"
             )
         connection.execute(
-            "CREATE INDEX IF NOT EXISTS foods_user_status ON foods(user_id, status)"
+            "CREATE INDEX IF NOT EXISTS foods_user_status "
+            "ON foods(user_id, status)"
         )
 
 
@@ -115,7 +132,12 @@ def food_to_dict(row: sqlite3.Row) -> dict[str, Any]:
     expiry = date.fromisoformat(item["expires_on"])
     days_left = (expiry - date.today()).days
     item["days_left"] = days_left
-    item["urgency"] = "expired" if days_left < 0 else "soon" if days_left <= 3 else "fresh"
+    if days_left < 0:
+        item["urgency"] = "expired"
+    elif days_left <= 3:
+        item["urgency"] = "soon"
+    else:
+        item["urgency"] = "fresh"
     return item
 
 
@@ -163,33 +185,54 @@ def register():
     ):
         return error_response("Escribe un correo electrónico válido.")
     if not isinstance(password, str) or not 8 <= len(password) <= 128:
-        return error_response("La contraseña debe tener entre 8 y 128 caracteres.")
+        return error_response(
+            "La contraseña debe tener entre 8 y 128 caracteres."
+        )
 
     try:
         with get_db() as connection:
             cursor = connection.execute(
-                "INSERT INTO users (name, email, password_hash) VALUES (?, ?, ?)",
-                (name.strip(), normalized_email, generate_password_hash(password)),
+                """
+                INSERT INTO users (name, email, password_hash)
+                VALUES (?, ?, ?)
+                """,
+                (
+                    name.strip(),
+                    normalized_email,
+                    generate_password_hash(password),
+                ),
             )
             user_id = cursor.lastrowid
             connection.execute(
-                "UPDATE foods SET user_id = ? WHERE user_id IS NULL", (user_id,)
+                "UPDATE foods SET user_id = ? WHERE user_id IS NULL",
+                (user_id,),
             )
     except sqlite3.IntegrityError:
         return error_response("Ya existe una cuenta con ese correo.", 409)
 
     session.clear()
     session["user_id"] = user_id
-    return jsonify(
-        {"user": {"id": user_id, "name": name.strip(), "email": normalized_email}}
-    ), 201
+    return (
+        jsonify(
+            {
+                "user": {
+                    "id": user_id,
+                    "name": name.strip(),
+                    "email": normalized_email,
+                }
+            }
+        ),
+        201,
+    )
 
 
 @app.post("/api/login")
 def login():
     payload = request.get_json(silent=True)
     if not isinstance(payload, dict):
-        return error_response("Envía tu correo y contraseña en formato JSON.")
+        return error_response(
+            "Envía tu correo y contraseña en formato JSON."
+        )
     email = payload.get("email")
     password = payload.get("password")
     if not isinstance(email, str) or not isinstance(password, str):
@@ -199,12 +242,20 @@ def login():
             "SELECT id, name, email, password_hash FROM users WHERE email = ?",
             (email.strip().casefold(),),
         ).fetchone()
-    if user is None or not check_password_hash(user["password_hash"], password):
+    if user is None or not check_password_hash(
+        user["password_hash"], password
+    ):
         return error_response("Correo o contraseña incorrectos.", 401)
     session.clear()
     session["user_id"] = user["id"]
     return jsonify(
-        {"user": {"id": user["id"], "name": user["name"], "email": user["email"]}}
+        {
+            "user": {
+                "id": user["id"],
+                "name": user["name"],
+                "email": user["email"],
+            }
+        }
     )
 
 
@@ -231,7 +282,8 @@ def dashboard():
             (g.current_user["id"],),
         ).fetchone()[0]
         wasted = connection.execute(
-            "SELECT COUNT(*) FROM foods WHERE user_id = ? AND status = 'wasted'",
+            "SELECT COUNT(*) FROM foods "
+            "WHERE user_id = ? AND status = 'wasted'",
             (g.current_user["id"],),
         ).fetchone()[0]
 
@@ -270,13 +322,19 @@ def add_food():
     if not isinstance(unit, str) or unit not in UNITS:
         return error_response("Selecciona una unidad válida.")
     if isinstance(quantity, bool):
-        return error_response("La cantidad debe ser un número mayor que cero.")
+        return error_response(
+            "La cantidad debe ser un número mayor que cero."
+        )
     try:
         amount = float(quantity)
     except (TypeError, ValueError):
-        return error_response("La cantidad debe ser un número mayor que cero.")
+        return error_response(
+            "La cantidad debe ser un número mayor que cero."
+        )
     if not 0 < amount <= 100000:
-        return error_response("La cantidad debe ser mayor que cero y no superar 100 000.")
+        return error_response(
+            "La cantidad debe ser mayor que cero y no superar 100 000."
+        )
     try:
         expiry = date.fromisoformat(expires_on)
     except (TypeError, ValueError):
@@ -287,10 +345,19 @@ def add_food():
     with get_db() as connection:
         cursor = connection.execute(
             """
-            INSERT INTO foods (user_id, name, category, quantity, unit, expires_on)
+            INSERT INTO foods (
+                user_id, name, category, quantity, unit, expires_on
+            )
             VALUES (?, ?, ?, ?, ?, ?)
             """,
-            (g.current_user["id"], name.strip(), category, amount, unit, expiry.isoformat()),
+            (
+                g.current_user["id"],
+                name.strip(),
+                category,
+                amount,
+                unit,
+                expiry.isoformat(),
+            ),
         )
         row = connection.execute(
             "SELECT * FROM foods WHERE id = ?", (cursor.lastrowid,)
@@ -337,7 +404,10 @@ def delete_food(food_id: int):
             (food_id, g.current_user["id"]),
         )
     if cursor.rowcount == 0:
-        return error_response("No encontramos ese alimento en tu despensa.", 404)
+        return error_response(
+            "No encontramos ese alimento en tu despensa.",
+            404,
+        )
     return jsonify({"deleted": food_id})
 
 
@@ -346,35 +416,72 @@ def delete_food(food_id: int):
 def recipe_ideas():
     with get_db() as connection:
         foods = connection.execute(
-            "SELECT name FROM foods WHERE user_id = ? AND status = 'available'",
+            "SELECT name FROM foods "
+            "WHERE user_id = ? AND status = 'available'",
             (g.current_user["id"],),
         ).fetchall()
     names = [row["name"] for row in foods]
     recipes = [
         {
             "title": "Salteado salvavidas",
-            "description": "Dora tus verduras con un poco de aceite y sírvelas con arroz, pasta o huevo.",
+            "description": (
+                "Dora tus verduras con un poco de aceite y sírvelas con "
+                "arroz, pasta o huevo."
+            ),
             "matches": [
-                name for name in names
-                if any(word in name.casefold() for word in ("tomate", "cebolla", "pimiento", "calabac", "zanahoria", "espinaca"))
+                name
+                for name in names
+                if any(
+                    word in name.casefold()
+                    for word in (
+                        "tomate",
+                        "cebolla",
+                        "pimiento",
+                        "calabac",
+                        "zanahoria",
+                        "espinaca",
+                    )
+                )
             ],
             "icon": "🥘",
         },
         {
             "title": "Fruta lista para compartir",
-            "description": "Combina la fruta madura en un bowl, licuado o compota para aprovecharla hoy.",
+            "description": (
+                "Combina la fruta madura en un bowl, licuado o compota "
+                "para aprovecharla hoy."
+            ),
             "matches": [
-                name for name in names
-                if any(word in name.casefold() for word in ("plátano", "banana", "manzana", "pera", "fresa", "mango", "fruta"))
+                name
+                for name in names
+                if any(
+                    word in name.casefold()
+                    for word in (
+                        "plátano",
+                        "banana",
+                        "manzana",
+                        "pera",
+                        "fresa",
+                        "mango",
+                        "fruta",
+                    )
+                )
             ],
             "icon": "🍓",
         },
         {
             "title": "Tostada sin desperdicio",
-            "description": "Aprovecha pan y acompáñalo con queso, huevo o las verduras que tengas.",
+            "description": (
+                "Aprovecha pan y acompáñalo con queso, huevo o las verduras "
+                "que tengas."
+            ),
             "matches": [
-                name for name in names
-                if any(word in name.casefold() for word in ("pan", "queso", "huevo", "aguacate"))
+                name
+                for name in names
+                if any(
+                    word in name.casefold()
+                    for word in ("pan", "queso", "huevo", "aguacate")
+                )
             ],
             "icon": "🍞",
         },
