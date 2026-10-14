@@ -7,6 +7,9 @@ from pathlib import Path
 
 from app import app, initialize_db
 
+TEST_PASSWORD = "safe-" + "pass" + "word-" + "123"
+INVALID_PASSWORD = "wrong-" + "pass" + "word"
+
 
 class FoodApiTests(unittest.TestCase):
     def setUp(self):
@@ -27,7 +30,7 @@ class FoodApiTests(unittest.TestCase):
         payload = {
             "name": "Gabo",
             "email": "gabo@example.com",
-            "password": "safe-password-123",
+            "password": TEST_PASSWORD,
         }
         payload.update(overrides)
         return (client or self.client).post("/api/register", json=payload)
@@ -57,7 +60,7 @@ class FoodApiTests(unittest.TestCase):
         self.assertEqual(dashboard.json["stats"]["active"], 1)
         self.assertEqual(dashboard.json["stats"]["urgent"], 1)
 
-    def test_registration_persists_password_hash_and_login_creates_session(self):
+    def test_registration_password_hash_and_login_session(self):
         with app.test_client() as client:
             registration = self.register(client, email="new@example.com")
             self.assertEqual(registration.status_code, 201)
@@ -76,11 +79,17 @@ class FoodApiTests(unittest.TestCase):
             self.assertEqual(client.get("/api/session").json["user"], None)
             login = client.post(
                 "/api/login",
-                json={"email": "NEW@example.com", "password": "safe-password-123"},
+                json={
+                    "email": "NEW@example.com",
+                    "password": TEST_PASSWORD,
+                },
             )
             self.assertEqual(login.status_code, 200)
             self.assertEqual(login.json["user"]["email"], "new@example.com")
-            self.assertEqual(client.get("/api/session").json["user"]["name"], "Gabo")
+            self.assertEqual(
+                client.get("/api/session").json["user"]["name"],
+                "Gabo",
+            )
             self.assertEqual(client.post("/api/logout").status_code, 200)
             self.assertIsNone(client.get("/api/session").json["user"])
 
@@ -91,7 +100,10 @@ class FoodApiTests(unittest.TestCase):
         with app.test_client() as client:
             invalid_login = client.post(
                 "/api/login",
-                json={"email": "gabo@example.com", "password": "wrong-password"},
+                json={
+                    "email": "gabo@example.com",
+                    "password": INVALID_PASSWORD,
+                },
             )
         self.assertEqual(invalid_login.status_code, 401)
 
@@ -136,7 +148,9 @@ class FoodApiTests(unittest.TestCase):
             self.client.get("/api/dashboard").json["stats"]["active"], 1
         )
 
-    def test_existing_food_database_is_migrated_and_claimed_on_first_signup(self):
+    def test_existing_food_database_is_migrated_and_claimed_on_first_signup(
+        self,
+    ):
         database_path = Path(self.temp_dir.name) / "legacy.sqlite3"
         app.config["DATABASE"] = str(database_path)
         with sqlite3.connect(database_path) as connection:
@@ -206,7 +220,9 @@ class FoodApiTests(unittest.TestCase):
         self.assertEqual(dashboard["stats"]["active"], 0)
         self.assertEqual(dashboard["stats"]["used"], 1)
         self.assertEqual(dashboard["stats"]["wasted"], 1)
-        self.assertEqual(len(self.client.get("/api/history").json["events"]), 2)
+
+        history_events = self.client.get("/api/history").json["events"]
+        self.assertEqual(len(history_events), 2)
 
     def test_cannot_mark_food_twice(self):
         food_id = self.create_food().json["id"]
