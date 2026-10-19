@@ -39,12 +39,37 @@ CATEGORIES = {
     "Otros",
 }
 FOOD_KEYWORDS = {
-    "Frutas": ("manzana", "pera", "plátano", "banana", "fresa", "uva", "mango", "kiwi", "naranja", "limón", "pomelo", "aguacate", "fruta"),
-    "Verduras": ("tomate", "pepino", "cebolla", "zanahoria", "lechuga", "espinaca", "brocoli", "calabaza", "pimiento", "apio", "repollo", "verdura"),
-    "Lácteos": ("leche", "yogur", "queso", "mantequilla", "crema", "yogurt", "lácteo"),
-    "Proteínas": ("huevo", "pollo", "pescado", "atun", "atún", "carne", "tofu", "legumbre", "lenteja", "garbanzo", "proteína"),
-    "Despensa": ("arroz", "pasta", "pan", "harina", "aceite", "sal", "azúcar", "cafe", "café", "frijol", "garbanzo", "legumbre", "despensa"),
-    "Otros": ("salsa", "condimento", "snack", "galleta", "tostada", "otros"),
+    "Frutas": (
+        "manzana", "pera", "plátano", "banana", "fresa", "uva", "mango", "kiwi",
+        "naranja", "limón", "pomelo", "aguacate", "uva", "melon", "melón",
+        "sandía", "sandia", "papaya", "coco", "piña", "fruta"
+    ),
+    "Verduras": (
+        "tomate", "pepino", "cebolla", "zanahoria", "lechuga", "espinaca",
+        "brocoli", "calabaza", "pimiento", "apio", "repollo", "verdura",
+        "coliflor", "berenjena", "papa", "patata", "cilantro", "perejil",
+        "aji", "ají", "acelga", "rabanito", "espinaca"
+    ),
+    "Lácteos": (
+        "leche", "yogur", "queso", "mantequilla", "crema", "yogurt",
+        "lácteo", "yogurth", "manteca", "quesadilla", "requeson", "requesón"
+    ),
+    "Proteínas": (
+        "huevo", "pollo", "pescado", "atun", "atún", "carne", "tofu",
+        "legumbre", "lenteja", "garbanzo", "proteína", "salmon", "salmón",
+        "jamon", "jamón", "cerdo", "pavo", "res", "cordero", "beans"
+    ),
+    "Despensa": (
+        "arroz", "pasta", "pan", "harina", "aceite", "sal", "azúcar",
+        "cafe", "café", "frijol", "garbanzo", "legumbre", "despensa",
+        "cereal", "avena", "galleta", "maiz", "maíz", "tostada", "salsa",
+        "sopa", "cocido", "condimento"
+    ),
+    "Otros": (
+        "salsa", "condimento", "snack", "galleta", "tostada", "otros",
+        "ensalada", "batido", "pizza", "hamburguesa", "taco", "sopa",
+        "postre", "mermelada", "dulce", "comida"
+    ),
 }
 
 
@@ -151,11 +176,28 @@ def infer_food_category(name: str) -> str:
     return "Otros"
 
 
+def is_food_like_name(name: str) -> bool:
+    normalized = normalize_food_name(name).casefold()
+    if not normalized:
+        return False
+    if any(keyword in normalized for keyword in (
+        "carro", "moto", "telefono", "pc", "laptop", "casa", "juego",
+        "libro", "teclado", "mesa", "silla", "coche", "auto", "perro",
+        "gato", "pelota", "ventana", "puerta", "camisa", "zapato", "telefono",
+        "llave", "cuaderno", "banco", "silla", "mesa", "lapiz", "lápiz"
+    )):
+        return False
+    for keywords in FOOD_KEYWORDS.values():
+        if any(keyword in normalized for keyword in keywords):
+            return True
+    return False
+
+
 def category_matches_name(category: str, name: str) -> bool:
     normalized = normalize_food_name(name).casefold()
     if not normalized:
         return False
-    if any(keyword in normalized for keyword in ("carro", "moto", "telefono", "pc", "laptop", "casa", "juego", "libro", "teclado", "mesa", "silla", "coche", "auto")):
+    if not is_food_like_name(normalized):
         return False
     if category == "Otros":
         return True
@@ -375,6 +417,8 @@ def add_food():
         return error_response("Selecciona una categoría válida.")
     if category not in CATEGORIES:
         return error_response("Selecciona una categoría válida.")
+    if not is_food_like_name(cleaned_name):
+        return error_response("Ese nombre no parece un alimento o ingrediente válido.")
     if not category_matches_name(category, cleaned_name):
         category = choose_category(category, cleaned_name)
         if category not in CATEGORIES:
