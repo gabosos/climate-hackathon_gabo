@@ -158,11 +158,11 @@ async function refreshData() {
 }
 
 function switchView(view) {
-  const views = ["inicio", "despensa", "ideas", "impacto", "pitch"];
+  const views = ["inicio", "despensa", "ideas", "impacto", "faq"];
   if (!views.includes(view)) return;
   document.querySelectorAll(".view").forEach((section) => section.classList.toggle("active", section.id === "view-" + view));
   document.querySelectorAll(".nav-link").forEach((link) => link.classList.toggle("active", link.dataset.view === view));
-  const names = { inicio: "Resumen", despensa: "Mi despensa", ideas: "Ideas para cocinar", impacto: "Mi impacto", pitch: "Pitch del hackathon" };
+  const names = { inicio: "Resumen", despensa: "Mi despensa", ideas: "Ideas para cocinar", impacto: "Mi impacto", faq: "Preguntas y defensa" };
   document.getElementById("breadcrumb-current").textContent = names[view];
   if (view === "ideas") renderIdeas().catch((error) => showToast(error.message));
   if (view === "impacto") renderHistory().catch((error) => showToast(error.message));

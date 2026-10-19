@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import re
 import secrets
 import sqlite3
 from contextlib import contextmanager
@@ -36,6 +37,14 @@ CATEGORIES = {
     "Proteínas",
     "Despensa",
     "Otros",
+}
+FOOD_KEYWORDS = {
+    "Frutas": ("manzana", "pera", "plátano", "banana", "fresa", "uva", "mango", "kiwi", "naranja", "limón", "pomelo", "aguacate", "fruta"),
+    "Verduras": ("tomate", "pepino", "cebolla", "zanahoria", "lechuga", "espinaca", "brocoli", "calabaza", "pimiento", "apio", "repollo", "verdura"),
+    "Lácteos": ("leche", "yogur", "queso", "mantequilla", "crema", "yogurt", "lácteo"),
+    "Proteínas": ("huevo", "pollo", "pescado", "atun", "atún", "carne", "tofu", "legumbre", "lenteja", "garbanzo", "proteína"),
+    "Despensa": ("arroz", "pasta", "pan", "harina", "aceite", "sal", "azúcar", "cafe", "café", "frijol", "garbanzo", "legumbre", "despensa"),
+    "Otros": ("salsa", "condimento", "snack", "galleta", "tostada", "otros"),
 }
 
 
@@ -127,11 +136,53 @@ def login_required(view):
     return wrapped
 
 
+def normalize_food_name(value: str) -> str:
+    return re.sub(r"\s+", " ", value.strip())
+
+
+def infer_food_category(name: str) -> str:
+    normalized = normalize_food_name(name).casefold()
+    if not normalized:
+        return "Otros"
+    for category, keywords in FOOD_KEYWORDS.items():
+        for keyword in keywords:
+            if keyword in normalized:
+                return category
+    return "Otros"
+
+
+def category_matches_name(category: str, name: str) -> bool:
+    normalized = normalize_food_name(name).casefold()
+    if not normalized:
+        return False
+    if any(keyword in normalized for keyword in ("carro", "moto", "telefono", "pc", "laptop", "casa", "juego", "libro", "teclado", "mesa", "silla", "coche", "auto")):
+        return False
+    if category == "Otros":
+        return True
+    inferred = infer_food_category(normalized)
+    return category == inferred or inferred == "Otros"
+
+
+def choose_category(category: str, name: str) -> str:
+    normalized = normalize_food_name(name)
+    if not normalized:
+        return category
+    inferred = infer_food_category(normalized)
+    if inferred == "Otros":
+        return "Otros"
+    if category not in CATEGORIES:
+        return inferred
+    if category_matches_name(category, normalized):
+        return category
+    return inferred
+
+
 def food_to_dict(row: sqlite3.Row) -> dict[str, Any]:
     item = dict(row)
     expiry = date.fromisoformat(item["expires_on"])
     days_left = (expiry - date.today()).days
     item["days_left"] = days_left
+    item["category"] = item.get("category") or infer_food_category(item.get("name", ""))
     if days_left < 0:
         item["urgency"] = "expired"
     elif days_left <= 3:
@@ -317,8 +368,17 @@ def add_food():
 
     if not isinstance(name, str) or not name.strip() or len(name.strip()) > 80:
         return error_response("Escribe un nombre de hasta 80 caracteres.")
-    if not isinstance(category, str) or category not in CATEGORIES:
+    cleaned_name = normalize_food_name(name)
+    if not cleaned_name:
+        return error_response("Escribe un nombre de hasta 80 caracteres.")
+    if not isinstance(category, str):
         return error_response("Selecciona una categoría válida.")
+    if category not in CATEGORIES:
+        return error_response("Selecciona una categoría válida.")
+    if not category_matches_name(category, cleaned_name):
+        category = choose_category(category, cleaned_name)
+        if category not in CATEGORIES:
+            return error_response("La categoría no coincide con el nombre del alimento. Usa un nombre relacionado con esa categoría o selecciona una que sí corresponda.")
     if not isinstance(unit, str) or unit not in UNITS:
         return error_response("Selecciona una unidad válida.")
     if isinstance(quantity, bool):
@@ -352,7 +412,7 @@ def add_food():
             """,
             (
                 g.current_user["id"],
-                name.strip(),
+                cleaned_name,
                 category,
                 amount,
                 unit,
@@ -416,34 +476,23 @@ def delete_food(food_id: int):
 def recipe_ideas():
     with get_db() as connection:
         foods = connection.execute(
-            "SELECT name FROM foods "
+            "SELECT name, category FROM foods "
             "WHERE user_id = ? AND status = 'available'",
             (g.current_user["id"],),
         ).fetchall()
+
     names = [row["name"] for row in foods]
-    recipes = [
+    by_category = {row["name"]: row["category"] for row in foods}
+
+    recipe_templates = [
         {
             "title": "Salteado salvavidas",
             "description": (
                 "Dora tus verduras con un poco de aceite y sírvelas con "
                 "arroz, pasta o huevo."
             ),
-            "matches": [
-                name
-                for name in names
-                if any(
-                    word in name.casefold()
-                    for word in (
-                        "tomate",
-                        "cebolla",
-                        "pimiento",
-                        "calabac",
-                        "zanahoria",
-                        "espinaca",
-                    )
-                )
-            ],
             "icon": "🥘",
+            "keywords": ("tomate", "cebolla", "pimiento", "calabac", "zanahoria", "espinaca", "pepino", "brocoli", "lechuga"),
         },
         {
             "title": "Fruta lista para compartir",
@@ -451,23 +500,8 @@ def recipe_ideas():
                 "Combina la fruta madura en un bowl, licuado o compota "
                 "para aprovecharla hoy."
             ),
-            "matches": [
-                name
-                for name in names
-                if any(
-                    word in name.casefold()
-                    for word in (
-                        "plátano",
-                        "banana",
-                        "manzana",
-                        "pera",
-                        "fresa",
-                        "mango",
-                        "fruta",
-                    )
-                )
-            ],
             "icon": "🍓",
+            "keywords": ("plátano", "banana", "manzana", "pera", "fresa", "mango", "uva", "kiwi", "naranja", "limón", "aguacate"),
         },
         {
             "title": "Tostada sin desperdicio",
@@ -475,19 +509,37 @@ def recipe_ideas():
                 "Aprovecha pan y acompáñalo con queso, huevo o las verduras "
                 "que tengas."
             ),
-            "matches": [
-                name
-                for name in names
-                if any(
-                    word in name.casefold()
-                    for word in ("pan", "queso", "huevo", "aguacate")
-                )
-            ],
             "icon": "🍞",
+            "keywords": ("pan", "queso", "huevo", "aguacate", "tomate", "cebolla"),
+        },
+        {
+            "title": "Combo práctico del día",
+            "description": (
+                "Mezcla lo que tengas en casa para hacer una comida rápida, "
+                "equilibrada y útil para cerrar la despensa."
+            ),
+            "icon": "🥗",
+            "keywords": ("arroz", "pasta", "pollo", "carne", "huevo", "queso", "verdura", "tomate", "ensalada"),
         },
     ]
-    for recipe in recipes:
-        recipe["matches"] = recipe["matches"][:4]
+
+    recipes = []
+    for template in recipe_templates:
+        matches = [
+            name
+            for name in names
+            if any(word in name.casefold() for word in template["keywords"])
+            or by_category.get(name) == "Verduras" and any(word in template["keywords"] for word in ("verdura", "tomate", "cebolla"))
+        ]
+        recipes.append(
+            {
+                "title": template["title"],
+                "description": template["description"],
+                "matches": list(dict.fromkeys(matches))[:4],
+                "icon": template["icon"],
+            }
+        )
+
     return jsonify({"recipes": recipes, "has_food": bool(names)})
 
 
