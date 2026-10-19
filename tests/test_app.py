@@ -197,6 +197,39 @@ class FoodApiTests(unittest.TestCase):
         self.assertEqual(response.json["name"], "Chocolate")
         self.assertEqual(response.json["category"], "Despensa")
 
+    def test_chocolate_eggs_and_butter_generate_relevant_recipes(self):
+        self.assertEqual(self.create_food(name="Chocolate").status_code, 201)
+        self.assertEqual(
+            self.create_food(name="Huevos", category="Proteínas").status_code,
+            201,
+        )
+        self.assertEqual(
+            self.create_food(name="Mantequilla", category="Lácteos").status_code,
+            201,
+        )
+
+        recipes = self.client.get("/api/ideas").json["recipes"]
+        by_title = {recipe["title"]: recipe for recipe in recipes}
+
+        mousse = by_title["Mousse de chocolate"]
+        scrambled_eggs = by_title["Huevos revueltos con mantequilla"]
+        self.assertEqual(mousse["matches"], ["Chocolate", "Huevos"])
+        self.assertEqual(
+            scrambled_eggs["matches"],
+            ["Huevos", "Mantequilla"],
+        )
+        self.assertIn("refrigera", " ".join(mousse["steps"]).casefold())
+
+    def test_multi_ingredient_recipe_requires_each_ingredient_group(self):
+        self.create_food(name="Chocolate")
+        self.create_food(name="Huevos", category="Proteínas")
+
+        recipes = self.client.get("/api/ideas").json["recipes"]
+
+        self.assertIn("Mousse de chocolate", [recipe["title"] for recipe in recipes])
+        self.assertNotIn("Pasta cremosa con queso", [recipe["title"] for recipe in recipes])
+        self.assertNotIn("Arroz con huevo", [recipe["title"] for recipe in recipes])
+
     def test_rejects_non_food_names(self):
         for name in ("carro", "perro", "computadora"):
             with self.subTest(name=name):

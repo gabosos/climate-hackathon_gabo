@@ -575,8 +575,8 @@ def recipe_ideas():
                 "Hornéalas a 220 °C durante 30–40 minutos, volteándolas a mitad de cocción.",
             ],
             "icon": "🥔",
-            "base_keywords": ("papa", "patata"),
-            "extra_keywords": (),
+            "required_groups": (("papa", "patata"),),
+            "optional_keywords": (),
         },
         {
             "title": "Ensalada fresca",
@@ -591,8 +591,8 @@ def recipe_ideas():
                 "Si tienes huevo, queso o pollo, agrégalo para hacerla más completa.",
             ],
             "icon": "🥗",
-            "base_keywords": ("lechuga", "tomate", "pepino", "aguacate"),
-            "extra_keywords": ("queso", "huevo", "pollo"),
+            "required_groups": (("lechuga", "tomate", "pepino", "aguacate"),),
+            "optional_keywords": ("queso", "huevo", "pollo"),
         },
         {
             "title": "Salteado de verduras",
@@ -606,11 +606,11 @@ def recipe_ideas():
                 "Sazona con sal y especias; añade huevo o tofu si aparece como coincidencia.",
             ],
             "icon": "🥘",
-            "base_keywords": (
+            "required_groups": ((
                 "cebolla", "pimiento", "zanahoria", "espinaca", "brocoli",
                 "calabaza", "zapallo", "apio", "berenjena", "acelga"
-            ),
-            "extra_keywords": ("huevo", "tofu", "pollo"),
+            ),),
+            "optional_keywords": ("huevo", "tofu", "pollo"),
         },
         {
             "title": "Bowl de fruta y yogur",
@@ -624,11 +624,11 @@ def recipe_ideas():
                 "Añade avena o frutos secos como complemento opcional.",
             ],
             "icon": "🍓",
-            "base_keywords": (
+            "required_groups": ((
                 "banana", "banano", "manzana", "pera", "fresa", "mango",
                 "uva", "kiwi", "naranja", "papaya", "melon", "sandia"
-            ),
-            "extra_keywords": ("yogur", "yogurt", "avena", "leche"),
+            ),),
+            "optional_keywords": ("yogur", "yogurt", "avena", "leche"),
         },
         {
             "title": "Arroz o pasta con acompañamiento",
@@ -642,8 +642,8 @@ def recipe_ideas():
                 "Mézclalo todo y sazona al gusto.",
             ],
             "icon": "🍝",
-            "base_keywords": ("arroz", "pasta"),
-            "extra_keywords": (
+            "required_groups": (("arroz", "pasta"),),
+            "optional_keywords": (
                 "tomate", "cebolla", "queso", "pollo", "carne", "huevo",
                 "frijol", "garbanzo", "lenteja", "verdura"
             ),
@@ -660,37 +660,129 @@ def recipe_ideas():
                 "Sírvelo caliente; agrega tomate si también lo tienes.",
             ],
             "icon": "🍞",
-            "base_keywords": ("pan",),
-            "extra_keywords": ("queso", "huevo", "aguacate", "tomate"),
+            "required_groups": (("pan",),),
+            "optional_keywords": ("queso", "huevo", "aguacate", "tomate"),
+        },
+        {
+            "title": "Mousse de chocolate",
+            "description": (
+                "Un postre aireado que aprovecha chocolate y huevos. Usa huevos "
+                "pasteurizados, ya que la preparación no los cocina por completo."
+            ),
+            "steps": [
+                "Derrite el chocolate a baño María y déjalo entibiar.",
+                "Separa los huevos; mezcla las yemas con el chocolate.",
+                "Bate las claras hasta que estén espumosas y firmes, e incorpóralas suavemente.",
+                "Refrigera al menos 2 horas y mantenlo frío hasta servir.",
+            ],
+            "icon": "🍫",
+            "required_groups": (("chocolate", "cacao"), ("huevo",)),
+            "optional_keywords": (),
+        },
+        {
+            "title": "Huevos revueltos con mantequilla",
+            "description": (
+                "Un desayuno sencillo y rápido. La mantequilla aporta sabor; "
+                "cocina los huevos a fuego bajo para que queden suaves."
+            ),
+            "steps": [
+                "Bate los huevos con una pizca de sal.",
+                "Derrite un poco de mantequilla en una sartén a fuego bajo.",
+                "Añade los huevos y remueve suavemente hasta que estén cocidos.",
+            ],
+            "icon": "🍳",
+            "required_groups": (("huevo",),),
+            "optional_keywords": ("mantequilla",),
+        },
+        {
+            "title": "Pasta cremosa con queso",
+            "description": (
+                "Una comida caliente y sencilla. El queso se integra mejor con "
+                "un poco del agua de cocción de la pasta."
+            ),
+            "steps": [
+                "Hierve la pasta hasta que esté al dente y reserva un poco del agua.",
+                "Mezcla la pasta caliente con queso y añade agua poco a poco.",
+                "Sazona y sirve enseguida; puedes sumar tomate o verduras si tienes.",
+            ],
+            "icon": "🧀",
+            "required_groups": (("pasta",), ("queso",)),
+            "optional_keywords": ("tomate", "cebolla", "espinaca", "brocoli"),
+        },
+        {
+            "title": "Arroz con huevo",
+            "description": (
+                "Una comida rendidora para aprovechar arroz y huevos. Puedes "
+                "sumar verduras que estén disponibles en tu despensa."
+            ),
+            "steps": [
+                "Cocina el arroz si todavía está crudo, o calienta el arroz ya cocido.",
+                "Cocina los huevos en una sartén y córtalos en trozos.",
+                "Mezcla con el arroz y agrega las verduras disponibles, bien cocidas.",
+            ],
+            "icon": "🍚",
+            "required_groups": (("arroz",), ("huevo",)),
+            "optional_keywords": (
+                "cebolla", "zanahoria", "pimiento", "espinaca", "brocoli"
+            ),
+        },
+        {
+            "title": "Tortilla de verduras",
+            "description": (
+                "Una opción caliente que combina huevos con verduras cocidas. "
+                "Usa solo las verduras disponibles y cocínalas antes de añadir el huevo."
+            ),
+            "steps": [
+                "Corta y cocina las verduras en una sartén hasta que estén tiernas.",
+                "Bate los huevos, viértelos sobre las verduras y cocina a fuego bajo.",
+                "Voltea la tortilla con cuidado cuando esté firme por debajo.",
+            ],
+            "icon": "🍳",
+            "required_groups": (
+                ("huevo",),
+                (
+                    "cebolla", "pimiento", "zanahoria", "espinaca",
+                    "brocoli", "calabaza", "zapallo", "acelga"
+                ),
+            ),
+            "optional_keywords": ("queso",),
         },
     ]
 
     recipes = []
     for template in recipe_templates:
-        base_matches = [
-            name
-            for name in names
-            if any(
-                keyword in normalized_names[name]
-                for keyword in template["base_keywords"]
-            )
+        required_matches = [
+            [
+                name
+                for name in names
+                if any(
+                    keyword in normalized_names[name]
+                    for keyword in keyword_group
+                )
+            ]
+            for keyword_group in template["required_groups"]
         ]
-        if not base_matches:
+        if any(not group for group in required_matches):
             continue
 
-        extra_matches = [
+        optional_matches = [
             name
             for name in names
             if any(
                 keyword in normalized_names[name]
-                for keyword in template["extra_keywords"]
+                for keyword in template["optional_keywords"]
             )
         ]
+        recipe_matches = [
+            name
+            for group in required_matches
+            for name in group
+        ] + optional_matches
         recipes.append({
             "title": template["title"],
             "description": template["description"],
             "steps": template["steps"],
-            "matches": list(dict.fromkeys(base_matches + extra_matches))[:6],
+            "matches": list(dict.fromkeys(recipe_matches))[:6],
             "icon": template["icon"],
         })
 
