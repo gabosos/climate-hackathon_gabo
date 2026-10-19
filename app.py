@@ -4,7 +4,9 @@ import os
 import re
 import secrets
 import sqlite3
+import unicodedata
 from contextlib import contextmanager
+from difflib import get_close_matches
 from datetime import date, timedelta
 from functools import wraps
 from pathlib import Path
@@ -40,29 +42,29 @@ CATEGORIES = {
 }
 FOOD_KEYWORDS = {
     "Frutas": (
-        "manzana", "pera", "plátano", "banana", "fresa", "uva", "mango", "kiwi",
-        "naranja", "limón", "pomelo", "aguacate", "uva", "melon", "melón",
-        "sandía", "sandia", "papaya", "coco", "piña", "fruta"
+        "manzana", "pera", "platano", "banana", "fresa", "uva", "mango", "kiwi",
+        "naranja", "limon", "pomelo", "aguacate", "melon", "sandia", "papaya",
+        "coco", "pina", "fruta", "banano", "banao"
     ),
     "Verduras": (
         "tomate", "pepino", "cebolla", "zanahoria", "lechuga", "espinaca",
         "brocoli", "calabaza", "pimiento", "apio", "repollo", "verdura",
         "coliflor", "berenjena", "papa", "patata", "cilantro", "perejil",
-        "aji", "ají", "acelga", "rabanito", "espinaca"
+        "aji", "acelga", "rabanito", "espinaca", "zapallo", "espinaca"
     ),
     "Lácteos": (
         "leche", "yogur", "queso", "mantequilla", "crema", "yogurt",
-        "lácteo", "yogurth", "manteca", "quesadilla", "requeson", "requesón"
+        "lacteo", "yogurth", "manteca", "quesadilla", "requeson", "mantequilla"
     ),
     "Proteínas": (
-        "huevo", "pollo", "pescado", "atun", "atún", "carne", "tofu",
-        "legumbre", "lenteja", "garbanzo", "proteína", "salmon", "salmón",
-        "jamon", "jamón", "cerdo", "pavo", "res", "cordero", "beans"
+        "huevo", "pollo", "pescado", "atun", "carne", "tofu",
+        "legumbre", "lenteja", "garbanzo", "proteina", "salmon",
+        "jamon", "cerdo", "pavo", "res", "cordero", "beans"
     ),
     "Despensa": (
-        "arroz", "pasta", "pan", "harina", "aceite", "sal", "azúcar",
-        "cafe", "café", "frijol", "garbanzo", "legumbre", "despensa",
-        "cereal", "avena", "galleta", "maiz", "maíz", "tostada", "salsa",
+        "arroz", "pasta", "pan", "harina", "aceite", "sal", "azucar",
+        "cafe", "frijol", "garbanzo", "legumbre", "despensa",
+        "cereal", "avena", "galleta", "maiz", "tostada", "salsa",
         "sopa", "cocido", "condimento"
     ),
     "Otros": (
@@ -162,39 +164,61 @@ def login_required(view):
 
 
 def normalize_food_name(value: str) -> str:
-    return re.sub(r"\s+", " ", value.strip())
+    value = re.sub(r"\s+", " ", value.strip())
+    value = unicodedata.normalize("NFKD", value)
+    value = value.encode("ascii", "ignore").decode("ascii")
+    value = value.casefold()
+    value = value.replace("á", "a").replace("é", "e").replace("í", "i").replace("ó", "o").replace("ú", "u")
+    return value
+
+
+FOOD_SUGGESTIONS = tuple(
+    word for words in FOOD_KEYWORDS.values() for word in words
+)
 
 
 def infer_food_category(name: str) -> str:
-    normalized = normalize_food_name(name).casefold()
+    normalized = normalize_food_name(name)
     if not normalized:
         return "Otros"
+    words = {word for word in normalized.split() if len(word) > 2}
     for category, keywords in FOOD_KEYWORDS.items():
         for keyword in keywords:
             if keyword in normalized:
                 return category
+        if words and any(word in keyword for word in words for keyword in keywords):
+            return category
     return "Otros"
 
 
 def is_food_like_name(name: str) -> bool:
-    normalized = normalize_food_name(name).casefold()
+    normalized = normalize_food_name(name)
     if not normalized:
         return False
     if any(keyword in normalized for keyword in (
         "carro", "moto", "telefono", "pc", "laptop", "casa", "juego",
         "libro", "teclado", "mesa", "silla", "coche", "auto", "perro",
-        "gato", "pelota", "ventana", "puerta", "camisa", "zapato", "telefono",
-        "llave", "cuaderno", "banco", "silla", "mesa", "lapiz", "lápiz"
+        "gato", "pelota", "ventana", "puerta", "camisa", "zapato", "llave",
+        "cuaderno", "banco", "lapiz", "computadora", "reloj", "lampara",
+        "celular", "guitarra", "botella", "sillones", "ordenador"
     )):
         return False
-    for keywords in FOOD_KEYWORDS.values():
-        if any(keyword in normalized for keyword in keywords):
-            return True
-    return False
+
+    if any(keyword in normalized for keyword in FOOD_SUGGESTIONS):
+        return True
+
+    words = [word for word in normalized.split() if len(word) > 2]
+    if not words:
+        return False
+
+    close_matches = []
+    for word in words:
+        close_matches.extend(get_close_matches(word, FOOD_SUGGESTIONS, n=1, cutoff=0.74))
+    return bool(close_matches)
 
 
 def category_matches_name(category: str, name: str) -> bool:
-    normalized = normalize_food_name(name).casefold()
+    normalized = normalize_food_name(name)
     if not normalized:
         return False
     if not is_food_like_name(normalized):
@@ -202,7 +226,7 @@ def category_matches_name(category: str, name: str) -> bool:
     if category == "Otros":
         return True
     inferred = infer_food_category(normalized)
-    return category == inferred or inferred == "Otros"
+    return category == inferred
 
 
 def choose_category(category: str, name: str) -> str:
@@ -210,8 +234,8 @@ def choose_category(category: str, name: str) -> str:
     if not normalized:
         return category
     inferred = infer_food_category(normalized)
-    if inferred == "Otros":
-        return "Otros"
+    if not inferred or inferred == "Otros":
+        return category
     if category not in CATEGORIES:
         return inferred
     if category_matches_name(category, normalized):
@@ -410,17 +434,18 @@ def add_food():
 
     if not isinstance(name, str) or not name.strip() or len(name.strip()) > 80:
         return error_response("Escribe un nombre de hasta 80 caracteres.")
-    cleaned_name = normalize_food_name(name)
-    if not cleaned_name:
+    cleaned_name = name.strip()
+    normalized_name = normalize_food_name(cleaned_name)
+    if not normalized_name:
         return error_response("Escribe un nombre de hasta 80 caracteres.")
     if not isinstance(category, str):
         return error_response("Selecciona una categoría válida.")
     if category not in CATEGORIES:
         return error_response("Selecciona una categoría válida.")
-    if not is_food_like_name(cleaned_name):
+    if not is_food_like_name(normalized_name):
         return error_response("Ese nombre no parece un alimento o ingrediente válido.")
-    if not category_matches_name(category, cleaned_name):
-        category = choose_category(category, cleaned_name)
+    if not category_matches_name(category, normalized_name):
+        category = choose_category(category, normalized_name)
         if category not in CATEGORIES:
             return error_response("La categoría no coincide con el nombre del alimento. Usa un nombre relacionado con esa categoría o selecciona una que sí corresponda.")
     if not isinstance(unit, str) or unit not in UNITS:
