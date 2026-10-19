@@ -65,7 +65,7 @@ FOOD_KEYWORDS = {
         "arroz", "pasta", "pan", "harina", "aceite", "sal", "azucar",
         "cafe", "frijol", "garbanzo", "legumbre", "despensa",
         "cereal", "avena", "galleta", "maiz", "tostada", "salsa",
-        "sopa", "cocido", "condimento"
+        "sopa", "cocido", "condimento", "chocolate", "cacao", "cocoa"
     ),
     "Otros": (
         "salsa", "condimento", "snack", "galleta", "tostada", "otros",
@@ -179,7 +179,7 @@ FOOD_SUGGESTIONS = tuple(
 
 def infer_food_category(name: str) -> str:
     normalized = normalize_food_name(name)
-    if not normalized:
+    if not normalized or not is_food_like_name(normalized):
         return "Otros"
     words = {word for word in normalized.split() if len(word) > 2}
     for category, keywords in FOOD_KEYWORDS.items():
@@ -187,6 +187,11 @@ def infer_food_category(name: str) -> str:
             if keyword in normalized:
                 return category
         if words and any(word in keyword for word in words for keyword in keywords):
+            return category
+        if any(
+            get_close_matches(word, keywords, n=1, cutoff=0.74)
+            for word in words
+        ):
             return category
     return "Otros"
 

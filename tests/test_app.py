@@ -190,6 +190,19 @@ class FoodApiTests(unittest.TestCase):
         self.assertEqual(response.status_code, 400)
         self.assertIn("error", response.json)
 
+    def test_accepts_chocolate_and_assigns_pantry_category(self):
+        response = self.create_food(name="Chocolate")
+
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.json["name"], "Chocolate")
+        self.assertEqual(response.json["category"], "Despensa")
+
+    def test_rejects_non_food_names(self):
+        for name in ("carro", "perro", "computadora"):
+            with self.subTest(name=name):
+                response = self.create_food(name=name)
+                self.assertEqual(response.status_code, 400)
+
     def test_recipe_ideas_only_match_relevant_foods(self):
         potato = self.create_food(
             name="Papas",
