@@ -552,62 +552,118 @@ def recipe_ideas():
 
     names = [row["name"] for row in foods]
     by_category = {row["name"]: row["category"] for row in foods}
+    normalized_names = {
+        name: normalize_food_name(name)
+        for name in names
+    }
 
     recipe_templates = [
         {
-            "title": "Salteado salvavidas",
+            "title": "Salteado de verduras con proteína",
             "description": (
-                "Dora tus verduras con un poco de aceite y sírvelas con "
-                "arroz, pasta o huevo."
+                "Sofríe tomate, cebolla y pimiento con un poco de aceite; añade "
+                "huevo, pollo o tofu y termina con un toque de sal y especias. "
+                "Es rápido, sabroso y perfecto para cerrar la semana con algo útil."
             ),
             "icon": "🥘",
-            "keywords": ("tomate", "cebolla", "pimiento", "calabac", "zanahoria", "espinaca", "pepino", "brocoli", "lechuga"),
+            "keywords": (
+                "tomate", "cebolla", "pimiento", "zanahoria", "espinaca",
+                "pepino", "brocoli", "lechuga", "calabaza", "apio",
+                "huevo", "pollo", "tofu", "queso"
+            ),
         },
         {
-            "title": "Fruta lista para compartir",
+            "title": "Bowl de fruta fresca y energético",
             "description": (
-                "Combina la fruta madura en un bowl, licuado o compota "
-                "para aprovecharla hoy."
+                "Combina la fruta madura con yogur, avena o un poco de miel para "
+                "hacer un desayuno o snack completo. Si tienes banana, manzana, "
+                "uva o mango, este bowl se prepara en minutos y aprovecha todo."
             ),
             "icon": "🍓",
-            "keywords": ("plátano", "banana", "manzana", "pera", "fresa", "mango", "uva", "kiwi", "naranja", "limón", "aguacate"),
+            "keywords": (
+                "banana", "banano", "manzana", "pera", "fresa", "mango",
+                "uva", "kiwi", "naranja", "aguacate", "yogur", "avena",
+                "leche"
+            ),
         },
         {
-            "title": "Tostada sin desperdicio",
+            "title": "Tostadas para no desperdiciar nada",
             "description": (
-                "Aprovecha pan y acompáñalo con queso, huevo o las verduras "
-                "que tengas."
+                "Usa pan, queso, huevo o aguacate como base y acompáñalo con tomate, "
+                "cebolla o cualquier verdura que tengas. Es una opción práctica, "
+                "rápida y muy útil cuando quieres cocinar sin complicarte."
             ),
             "icon": "🍞",
-            "keywords": ("pan", "queso", "huevo", "aguacate", "tomate", "cebolla"),
+            "keywords": (
+                "pan", "queso", "huevo", "aguacate", "tomate", "cebolla",
+                "pimiento", "verdura"
+            ),
         },
         {
-            "title": "Combo práctico del día",
+            "title": "Pasta o arroz de despensa con sabor",
             "description": (
-                "Mezcla lo que tengas en casa para hacer una comida rápida, "
-                "equilibrada y útil para cerrar la despensa."
+                "Haz una base con arroz o pasta, luego integra tomate, queso, pollo, "
+                "verduras o legumbres que tengas. La idea es cocinar algo completo, "
+                "caliente y fácil de repetir varias veces a la semana."
+            ),
+            "icon": "🍝",
+            "keywords": (
+                "arroz", "pasta", "pollo", "carne", "huevo", "queso",
+                "tomate", "cebolla", "frijol", "garbanzo", "legumbre"
+            ),
+        },
+        {
+            "title": "Ensalada rápida y fresca",
+            "description": (
+                "Mezcla lechuga, tomate, pepino, aguacate o cualquier verdura que "
+                "tengas con un toque de aceite y sal. Si hay queso, huevo o pollo, "
+                "queda aún más completa y sirve para una comida liviana."
             ),
             "icon": "🥗",
-            "keywords": ("arroz", "pasta", "pollo", "carne", "huevo", "queso", "verdura", "tomate", "ensalada"),
+            "keywords": (
+                "lechuga", "tomate", "pepino", "aguacate", "verdura",
+                "queso", "huevo", "pollo", "aceite"
+            ),
+        },
+        {
+            "title": "Licuado para usar ingredientes maduros",
+            "description": (
+                "Blend fruta, yogur, leche o avena y aprovecha lo que esté más listo "
+                " o más cercano a vencer. Es una solución excelente para desayuno, "
+                "merienda o una opción ligera sin desperdiciar nada."
+            ),
+            "icon": "🥤",
+            "keywords": (
+                "banana", "banano", "mango", "fresa", "uva", "manzana",
+                "pera", "yogur", "leche", "avena", "aguacate"
+            ),
         },
     ]
 
     recipes = []
     for template in recipe_templates:
-        matches = [
-            name
-            for name in names
-            if any(word in name.casefold() for word in template["keywords"])
-            or by_category.get(name) == "Verduras" and any(word in template["keywords"] for word in ("verdura", "tomate", "cebolla"))
-        ]
-        recipes.append(
-            {
-                "title": template["title"],
-                "description": template["description"],
-                "matches": list(dict.fromkeys(matches))[:4],
-                "icon": template["icon"],
-            }
-        )
+        matches = []
+        for name in names:
+            normalized_name = normalized_names[name]
+            if any(keyword in normalized_name for keyword in template["keywords"]):
+                matches.append(name)
+            elif by_category.get(name) == "Verduras" and any(
+                word in template["keywords"]
+                for word in ("verdura", "tomate", "cebolla", "pimiento")
+            ):
+                matches.append(name)
+
+        recipe = {
+            "title": template["title"],
+            "description": template["description"],
+            "matches": list(dict.fromkeys(matches))[:6],
+            "icon": template["icon"],
+        }
+
+        if not recipe["matches"] and names:
+            fallback = names[:3]
+            recipe["matches"] = list(dict.fromkeys(fallback))
+        recipes.append(recipe)
 
     return jsonify({"recipes": recipes, "has_food": bool(names)})
 
