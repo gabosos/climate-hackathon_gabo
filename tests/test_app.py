@@ -190,6 +190,39 @@ class FoodApiTests(unittest.TestCase):
         self.assertEqual(response.status_code, 400)
         self.assertIn("error", response.json)
 
+    def test_recipe_ideas_only_match_relevant_foods(self):
+        potato = self.create_food(
+            name="Papas",
+            category="Verduras",
+        )
+        lettuce = self.create_food(
+            name="Lechuga",
+            category="Verduras",
+        )
+        self.assertEqual(potato.status_code, 201)
+        self.assertEqual(lettuce.status_code, 201)
+
+        response = self.client.get("/api/ideas")
+        self.assertEqual(response.status_code, 200)
+        recipes = response.json["recipes"]
+        by_title = {recipe["title"]: recipe for recipe in recipes}
+
+        potato_recipe = by_title["Papas doradas al horno"]
+        salad_recipe = by_title["Ensalada fresca"]
+        self.assertEqual(potato_recipe["matches"], ["Papas"])
+        self.assertEqual(salad_recipe["matches"], ["Lechuga"])
+        self.assertNotIn("Lechuga", potato_recipe["matches"])
+        self.assertNotIn("Papas", salad_recipe["matches"])
+
+    def test_recipe_ideas_do_not_show_unmatched_recipes(self):
+        self.create_food(name="Papas", category="Verduras")
+
+        recipes = self.client.get("/api/ideas").json["recipes"]
+
+        self.assertEqual([recipe["title"] for recipe in recipes], [
+            "Papas doradas al horno",
+        ])
+
     def test_rejects_invalid_json_field_types(self):
         response = self.create_food(category=[])
         self.assertEqual(response.status_code, 400)

@@ -136,8 +136,13 @@ function renderPantry() {
 
 async function renderIdeas() {
   const { recipes, has_food: hasFood } = await api("/api/ideas");
-  document.getElementById("recipe-list").innerHTML = recipes.map((recipe) => `
-    <article class="recipe-card"><div class="recipe-card-icon">${recipe.icon}</div><h2>${escapeHtml(recipe.title)}</h2><p>${escapeHtml(recipe.description)}</p><span class="match-label">${recipe.matches.length ? "Podrías usar:" : "Ideas para inspirarte"}</span><div class="match-chips">${recipe.matches.length ? recipe.matches.map((name) => `<span class="match-chip">${escapeHtml(name)}</span>`).join("") : `<span class="no-match">${hasFood ? "Aún no detectamos ingredientes relacionados." : "Agrega alimentos para ver coincidencias."}</span>`}</div></article>`).join("");
+  const recipeList = document.getElementById("recipe-list");
+  if (!recipes.length) {
+    recipeList.innerHTML = `<p class="no-items">${hasFood ? "Todavía no encontramos una receta que encaje con tus alimentos. Agrega más ingredientes para ver nuevas combinaciones." : "Agrega alimentos a tu despensa para recibir ideas de cocina."}</p>`;
+    return;
+  }
+  recipeList.innerHTML = recipes.map((recipe) => `
+    <article class="recipe-card"><div class="recipe-card-icon">${recipe.icon}</div><h2>${escapeHtml(recipe.title)}</h2><p>${escapeHtml(recipe.description)}</p><span class="match-label">De tu despensa:</span><div class="match-chips">${recipe.matches.map((name) => `<span class="match-chip">${escapeHtml(name)}</span>`).join("")}</div><span class="match-label">Cómo prepararlo:</span><ol class="recipe-steps">${recipe.steps.map((step) => `<li>${escapeHtml(step)}</li>`).join("")}</ol></article>`).join("");
 }
 
 async function renderHistory() {

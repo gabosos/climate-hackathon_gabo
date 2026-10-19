@@ -551,7 +551,6 @@ def recipe_ideas():
         ).fetchall()
 
     names = [row["name"] for row in foods]
-    by_category = {row["name"]: row["category"] for row in foods}
     normalized_names = {
         name: normalize_food_name(name)
         for name in names
@@ -559,111 +558,136 @@ def recipe_ideas():
 
     recipe_templates = [
         {
-            "title": "Salteado de verduras con proteína",
+            "title": "Papas doradas al horno",
             "description": (
-                "Sofríe tomate, cebolla y pimiento con un poco de aceite; añade "
-                "huevo, pollo o tofu y termina con un toque de sal y especias. "
-                "Es rápido, sabroso y perfecto para cerrar la semana con algo útil."
+                "Una forma sencilla de aprovechar las papas: quedan doradas por "
+                "fuera y suaves por dentro, sin mezclarlas con ingredientes que "
+                "no van en esta preparación."
             ),
-            "icon": "🥘",
-            "keywords": (
-                "tomate", "cebolla", "pimiento", "zanahoria", "espinaca",
-                "pepino", "brocoli", "lechuga", "calabaza", "apio",
-                "huevo", "pollo", "tofu", "queso"
-            ),
+            "steps": [
+                "Corta las papas en gajos o cubos parejos.",
+                "Mézclalas con un poco de aceite, sal y pimienta.",
+                "Hornéalas a 220 °C durante 30–40 minutos, volteándolas a mitad de cocción.",
+            ],
+            "icon": "🥔",
+            "base_keywords": ("papa", "patata"),
+            "extra_keywords": (),
         },
         {
-            "title": "Bowl de fruta fresca y energético",
+            "title": "Ensalada fresca",
             "description": (
-                "Combina la fruta madura con yogur, avena o un poco de miel para "
-                "hacer un desayuno o snack completo. Si tienes banana, manzana, "
-                "uva o mango, este bowl se prepara en minutos y aprovecha todo."
+                "Una combinación fresca para aprovechar verduras que suelen "
+                "comerse crudas. Puedes añadir un ingrediente de proteína si "
+                "aparece entre tus coincidencias."
             ),
-            "icon": "🍓",
-            "keywords": (
-                "banana", "banano", "manzana", "pera", "fresa", "mango",
-                "uva", "kiwi", "naranja", "aguacate", "yogur", "avena",
-                "leche"
-            ),
-        },
-        {
-            "title": "Tostadas para no desperdiciar nada",
-            "description": (
-                "Usa pan, queso, huevo o aguacate como base y acompáñalo con tomate, "
-                "cebolla o cualquier verdura que tengas. Es una opción práctica, "
-                "rápida y muy útil cuando quieres cocinar sin complicarte."
-            ),
-            "icon": "🍞",
-            "keywords": (
-                "pan", "queso", "huevo", "aguacate", "tomate", "cebolla",
-                "pimiento", "verdura"
-            ),
-        },
-        {
-            "title": "Pasta o arroz de despensa con sabor",
-            "description": (
-                "Haz una base con arroz o pasta, luego integra tomate, queso, pollo, "
-                "verduras o legumbres que tengas. La idea es cocinar algo completo, "
-                "caliente y fácil de repetir varias veces a la semana."
-            ),
-            "icon": "🍝",
-            "keywords": (
-                "arroz", "pasta", "pollo", "carne", "huevo", "queso",
-                "tomate", "cebolla", "frijol", "garbanzo", "legumbre"
-            ),
-        },
-        {
-            "title": "Ensalada rápida y fresca",
-            "description": (
-                "Mezcla lechuga, tomate, pepino, aguacate o cualquier verdura que "
-                "tengas con un toque de aceite y sal. Si hay queso, huevo o pollo, "
-                "queda aún más completa y sirve para una comida liviana."
-            ),
+            "steps": [
+                "Lava y corta las verduras que aparecen en tus coincidencias.",
+                "Aliña con aceite, limón o vinagre, sal y pimienta.",
+                "Si tienes huevo, queso o pollo, agrégalo para hacerla más completa.",
+            ],
             "icon": "🥗",
-            "keywords": (
-                "lechuga", "tomate", "pepino", "aguacate", "verdura",
-                "queso", "huevo", "pollo", "aceite"
+            "base_keywords": ("lechuga", "tomate", "pepino", "aguacate"),
+            "extra_keywords": ("queso", "huevo", "pollo"),
+        },
+        {
+            "title": "Salteado de verduras",
+            "description": (
+                "Un salteado caliente para verduras que quedan bien cocidas. "
+                "Sírvelo solo o acompáñalo con arroz si también tienes."
+            ),
+            "steps": [
+                "Corta en trozos pequeños las verduras que aparecen en tus coincidencias.",
+                "Saltéalas con un poco de aceite a fuego medio-alto hasta que estén tiernas.",
+                "Sazona con sal y especias; añade huevo o tofu si aparece como coincidencia.",
+            ],
+            "icon": "🥘",
+            "base_keywords": (
+                "cebolla", "pimiento", "zanahoria", "espinaca", "brocoli",
+                "calabaza", "zapallo", "apio", "berenjena", "acelga"
+            ),
+            "extra_keywords": ("huevo", "tofu", "pollo"),
+        },
+        {
+            "title": "Bowl de fruta y yogur",
+            "description": (
+                "Una opción rápida para el desayuno o la merienda. Usa fruta fresca "
+                "y, si tienes, yogur o avena para darle más consistencia."
+            ),
+            "steps": [
+                "Corta la fruta que aparece en tus coincidencias.",
+                "Sírvela con yogur o leche si tienes.",
+                "Añade avena o frutos secos como complemento opcional.",
+            ],
+            "icon": "🍓",
+            "base_keywords": (
+                "banana", "banano", "manzana", "pera", "fresa", "mango",
+                "uva", "kiwi", "naranja", "papaya", "melon", "sandia"
+            ),
+            "extra_keywords": ("yogur", "yogurt", "avena", "leche"),
+        },
+        {
+            "title": "Arroz o pasta con acompañamiento",
+            "description": (
+                "Prepara una base caliente y combínala con los ingredientes que "
+                "coinciden abajo. No agregamos alimentos que no estén en tu despensa."
+            ),
+            "steps": [
+                "Cocina el arroz o la pasta siguiendo las instrucciones del paquete.",
+                "Si tienes verduras o proteína entre tus coincidencias, cocínalas aparte.",
+                "Mézclalo todo y sazona al gusto.",
+            ],
+            "icon": "🍝",
+            "base_keywords": ("arroz", "pasta"),
+            "extra_keywords": (
+                "tomate", "cebolla", "queso", "pollo", "carne", "huevo",
+                "frijol", "garbanzo", "lenteja", "verdura"
             ),
         },
         {
-            "title": "Licuado para usar ingredientes maduros",
+            "title": "Tostada con acompañamiento",
             "description": (
-                "Blend fruta, yogur, leche o avena y aprovecha lo que esté más listo "
-                " o más cercano a vencer. Es una solución excelente para desayuno, "
-                "merienda o una opción ligera sin desperdiciar nada."
+                "Una comida sencilla que parte del pan que tienes. Completa la "
+                "tostada solamente con los acompañamientos que aparecen abajo."
             ),
-            "icon": "🥤",
-            "keywords": (
-                "banana", "banano", "mango", "fresa", "uva", "manzana",
-                "pera", "yogur", "leche", "avena", "aguacate"
-            ),
+            "steps": [
+                "Tuesta el pan en una sartén o tostadora.",
+                "Añade queso, huevo o aguacate solo si aparecen entre tus coincidencias.",
+                "Sírvelo caliente; agrega tomate si también lo tienes.",
+            ],
+            "icon": "🍞",
+            "base_keywords": ("pan",),
+            "extra_keywords": ("queso", "huevo", "aguacate", "tomate"),
         },
     ]
 
     recipes = []
     for template in recipe_templates:
-        matches = []
-        for name in names:
-            normalized_name = normalized_names[name]
-            if any(keyword in normalized_name for keyword in template["keywords"]):
-                matches.append(name)
-            elif by_category.get(name) == "Verduras" and any(
-                word in template["keywords"]
-                for word in ("verdura", "tomate", "cebolla", "pimiento")
-            ):
-                matches.append(name)
+        base_matches = [
+            name
+            for name in names
+            if any(
+                keyword in normalized_names[name]
+                for keyword in template["base_keywords"]
+            )
+        ]
+        if not base_matches:
+            continue
 
-        recipe = {
+        extra_matches = [
+            name
+            for name in names
+            if any(
+                keyword in normalized_names[name]
+                for keyword in template["extra_keywords"]
+            )
+        ]
+        recipes.append({
             "title": template["title"],
             "description": template["description"],
-            "matches": list(dict.fromkeys(matches))[:6],
+            "steps": template["steps"],
+            "matches": list(dict.fromkeys(base_matches + extra_matches))[:6],
             "icon": template["icon"],
-        }
-
-        if not recipe["matches"] and names:
-            fallback = names[:3]
-            recipe["matches"] = list(dict.fromkeys(fallback))
-        recipes.append(recipe)
+        })
 
     return jsonify({"recipes": recipes, "has_food": bool(names)})
 
