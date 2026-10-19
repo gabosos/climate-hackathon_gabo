@@ -2,3 +2,7 @@
 __pycache__/
 *.py[cod]
 instance/
+
+.DS_Store
+
+.DS_Store
